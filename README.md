@@ -14,6 +14,44 @@ Instead of asking the agent to solve the same task again and again, the workflow
 
 The project is intentionally small. It does not try to generate a full production CLI framework. Its goal is to help users quickly preserve one-off solutions as local tools they can run later without repeating the same agent conversation.
 
+## Quick Start
+
+Install the skill:
+
+```powershell
+git clone <your-repo-url>
+cd scripts_factory
+.\skills\offline-script-factory\scripts\install.ps1
+```
+
+```bash
+git clone <your-repo-url>
+cd scripts_factory
+bash ./skills/offline-script-factory/scripts/install.sh
+```
+
+By default, the installer uses the first available location below:
+
+1. `OFFLINE_SCRIPT_FACTORY_SKILLS_DIR`
+2. `CODEX_HOME/skills`
+3. `~/.codex/skills`
+
+You can also install to a custom skills directory explicitly:
+
+```powershell
+.\skills\offline-script-factory\scripts\install.ps1 -SkillsDir "D:\my-skills"
+```
+
+```bash
+bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-agent/skills"
+```
+
+Then invoke it with a prompt such as:
+
+```text
+Use $offline-script-factory to turn this completed task into a reusable offline script bundle.
+```
+
 ## What This Project Includes
 
 - A reusable skill at [`skills/offline-script-factory/SKILL.md`](./skills/offline-script-factory/SKILL.md)
@@ -53,7 +91,9 @@ Unless the task clearly needs more, the generated output should stay minimal:
 │       ├── references/
 │       │   └── offline-automation-checklist.md
 │       └── scripts/
-│           └── init_offline_bundle.py
+│           ├── init_offline_bundle.py
+│           ├── install.ps1
+│           └── install.sh
 ├── README.md
 ├── README_CN.md
 └── LICENSE
@@ -61,19 +101,7 @@ Unless the task clearly needs more, the generated output should stay minimal:
 
 ## Usage
 
-This repository currently ships the skill source, not a one-click installer.
-
-To use it in a skill-based environment, copy the folder below into your agent's skills directory:
-
-```text
-skills/offline-script-factory
-```
-
-Then invoke it with a prompt such as:
-
-```text
-Use $offline-script-factory to turn this completed task into a reusable offline script bundle.
-```
+This repository now includes install scripts for quickly copying the skill into a skills directory.
 
 If your agent platform does not support explicit skill invocation, you can still reuse the workflow by reading [`SKILL.md`](./skills/offline-script-factory/SKILL.md) directly.
 

@@ -6,6 +6,44 @@
 
 它的核心目标不是生成一整套重量级 CLI 框架，而是把已经验证可行的解决方案快速固化下来，让用户以后直接本地运行，不需要每次都重新发起一次完整的 agent 对话。
 
+## 快速开始
+
+先安装这个 skill：
+
+```powershell
+git clone <你的仓库地址>
+cd scripts_factory
+.\skills\offline-script-factory\scripts\install.ps1
+```
+
+```bash
+git clone <你的仓库地址>
+cd scripts_factory
+bash ./skills/offline-script-factory/scripts/install.sh
+```
+
+安装脚本默认按下面顺序寻找 skills 目录：
+
+1. `OFFLINE_SCRIPT_FACTORY_SKILLS_DIR`
+2. `CODEX_HOME/skills`
+3. `~/.codex/skills`
+
+如果你想手动指定目标目录，也可以这样执行：
+
+```powershell
+.\skills\offline-script-factory\scripts\install.ps1 -SkillsDir "D:\my-skills"
+```
+
+```bash
+bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-agent/skills"
+```
+
+安装后可以用类似这样的提示词调用：
+
+```text
+使用 $offline-script-factory 把当前已解决的需求沉淀成一个可离线运行的本地脚本。
+```
+
 ## 这个项目在做什么
 
 标准流程是：
@@ -58,7 +96,9 @@
 │       ├── references/
 │       │   └── offline-automation-checklist.md
 │       └── scripts/
-│           └── init_offline_bundle.py
+│           ├── init_offline_bundle.py
+│           ├── install.ps1
+│           └── install.sh
 ├── README.md
 ├── README_CN.md
 └── LICENSE
@@ -66,19 +106,7 @@
 
 ## 如何使用
 
-当前仓库提供的是 skill 源码，还没有做一键安装器。
-
-如果你的 agent 平台支持 skill 机制，把下面这个目录复制到对应的 skills 目录即可：
-
-```text
-skills/offline-script-factory
-```
-
-随后可以用类似这样的提示词调用：
-
-```text
-使用 $offline-script-factory 把当前已解决的需求沉淀成一个可离线运行的本地脚本。
-```
+当前仓库已经提供了安装脚本，可以快速把 skill 复制到目标 skills 目录。
 
 如果你的 agent 平台不支持显式 skill 调用，也可以直接读取 [`SKILL.md`](./skills/offline-script-factory/SKILL.md)，按其中流程执行。
 
