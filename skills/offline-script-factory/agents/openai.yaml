@@ -1,0 +1,4 @@
+interface:
+  display_name: "离线脚本工厂"
+  short_description: "把已解决需求沉淀为可离线运行脚本"
+  default_prompt: "使用 $offline-script-factory 把当前已解决的需求沉淀成一个可离线运行的本地脚本，并在交付前自行运行验证，失败就继续修复。"
