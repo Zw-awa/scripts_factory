@@ -9,6 +9,10 @@ import re
 import sys
 from pathlib import Path
 
+BASE_SPEC_NOTES = [
+    "请优先把外部工具路径放进配置文件、环境变量或单独路径配置，不要散落硬编码在源码里。",
+]
+
 
 PYTHON_TEMPLATE = """#!/usr/bin/env python3
 \"\"\"__TITLE__。
@@ -197,6 +201,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("bundle_name", help="生成目录的名称。")
     parser.add_argument(
+        "--display-name",
+        help="可选的展示名称，默认使用 bundle_name。",
+    )
+    parser.add_argument(
+        "--purpose",
+        help="可选的用途说明，会写入 bundle.spec.json。",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=Path.cwd(),
@@ -232,6 +244,49 @@ def bundle_title(raw_name: str, folder_name: str) -> str:
     return title if title else folder_name
 
 
+def command_examples(runtime: str, script_name: str) -> tuple[str, str]:
+    if runtime == "python":
+        return (
+            f"python {script_name} --help",
+            f"python {script_name} --self-test",
+        )
+
+    return (
+        f".\\{script_name} -Help",
+        f".\\{script_name} -SelfTest",
+    )
+
+
+def build_spec(
+    *,
+    bundle_name: str,
+    display_name: str,
+    purpose: str | None,
+    runtime: str,
+    script_name: str,
+    with_config: bool,
+) -> dict:
+    help_command, self_test_command = command_examples(runtime, script_name)
+    notes = list(BASE_SPEC_NOTES)
+    if not purpose:
+        notes.insert(0, "请把真实用途补充到 purpose。")
+
+    return {
+        "schema": "offline-script-factory.bundle/v1",
+        "bundle_name": bundle_name,
+        "display_name": display_name,
+        "purpose": purpose or "请补充这个 bundle 的真实用途。",
+        "runtime": runtime,
+        "entry_point": script_name,
+        "help_command": help_command,
+        "self_test_command": self_test_command,
+        "config_file": "config.example.json" if with_config else None,
+        "environment_variables": [],
+        "external_dependencies": [],
+        "notes": notes,
+    }
+
+
 def render_script(runtime: str, title: str) -> tuple[str, str]:
     if runtime == "python":
         return "run.py", PYTHON_TEMPLATE.replace("__TITLE__", title)
@@ -253,13 +308,34 @@ def main() -> int:
     output_root = args.output.resolve()
     bundle_dir = output_root / folder_name
     bundle_dir.mkdir(parents=True, exist_ok=True)
+    display_name = args.display_name.strip() if args.display_name else bundle_title(
+        args.bundle_name, folder_name
+    )
 
     script_name, script_body = render_script(
         runtime=args.runtime,
-        title=bundle_title(args.bundle_name, folder_name),
+        title=display_name,
     )
     script_path = bundle_dir / script_name
     write_text_file(script_path, script_body, args.force)
+
+    spec_path = bundle_dir / "bundle.spec.json"
+    spec_body = (
+        json.dumps(
+            build_spec(
+                bundle_name=folder_name,
+                display_name=display_name,
+                purpose=args.purpose.strip() if args.purpose else None,
+                runtime=args.runtime,
+                script_name=script_name,
+                with_config=args.with_config,
+            ),
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
+    write_text_file(spec_path, spec_body, args.force)
 
     if args.with_config:
         config_path = bundle_dir / "config.example.json"
@@ -269,6 +345,7 @@ def main() -> int:
     print(f"已创建 bundle: {bundle_dir}")
     print(f"运行时: {args.runtime}")
     print(f"入口脚本: {script_path.name}")
+    print("元数据文件: bundle.spec.json")
     if args.with_config:
         print("配置文件: config.example.json")
 

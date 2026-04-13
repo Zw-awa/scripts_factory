@@ -60,6 +60,10 @@ bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-
   [`skills/offline-script-factory/SKILL.md`](./skills/offline-script-factory/SKILL.md)
 - bundle 脚手架生成器：
   [`skills/offline-script-factory/scripts/init_offline_bundle.py`](./skills/offline-script-factory/scripts/init_offline_bundle.py)
+- bundle 索引生成器：
+  [`skills/offline-script-factory/scripts/update_bundle_index.py`](./skills/offline-script-factory/scripts/update_bundle_index.py)
+- 元数据校验器：
+  [`skills/offline-script-factory/scripts/validate_bundle_metadata.py`](./skills/offline-script-factory/scripts/validate_bundle_metadata.py)
 - 离线可行性与验证清单：
   [`skills/offline-script-factory/references/offline-automation-checklist.md`](./skills/offline-script-factory/references/offline-automation-checklist.md)
 
@@ -79,10 +83,13 @@ bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-
 ```text
 <bundle-name>/
   run.py | run.ps1
+  bundle.spec.json
   config.example.json
 ```
 
-其中 `config.example.json` 不是必选项，只有当任务确实存在稳定配置时才需要。
+其中 `bundle.spec.json` 是 bundle 的机器可读元数据来源。
+
+`config.example.json` 不是必选项，只有当任务确实存在稳定配置时才需要。
 
 ## 仓库结构
 
@@ -98,7 +105,9 @@ bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-
 │       └── scripts/
 │           ├── init_offline_bundle.py
 │           ├── install.ps1
-│           └── install.sh
+│           ├── install.sh
+│           ├── update_bundle_index.py
+│           └── validate_bundle_metadata.py
 ├── README.md
 ├── README_CN.md
 └── LICENSE
@@ -107,6 +116,20 @@ bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-
 ## 如何使用
 
 当前仓库已经提供了安装脚本，可以快速把 skill 复制到目标 skills 目录。
+
+如果你在一个目录里沉淀了多个 bundle，可以运行索引脚本生成本地总索引：
+
+```powershell
+python .\skills\offline-script-factory\scripts\update_bundle_index.py --root .\my-bundles
+```
+
+它会生成 `bundles.index.json`，方便后续 agent 先检查本地已有工具，再决定是否新建。
+
+如果你想在复用或发布前检查元数据是否完整，可以运行：
+
+```powershell
+python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\my-bundles
+```
 
 如果你的 agent 平台不支持显式 skill 调用，也可以直接读取 [`SKILL.md`](./skills/offline-script-factory/SKILL.md)，按其中流程执行。
 

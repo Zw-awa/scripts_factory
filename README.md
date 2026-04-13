@@ -56,6 +56,8 @@ Use $offline-script-factory to turn this completed task into a reusable offline 
 
 - A reusable skill at [`skills/offline-script-factory/SKILL.md`](./skills/offline-script-factory/SKILL.md)
 - A bundle scaffolder at [`skills/offline-script-factory/scripts/init_offline_bundle.py`](./skills/offline-script-factory/scripts/init_offline_bundle.py)
+- A bundle index generator at [`skills/offline-script-factory/scripts/update_bundle_index.py`](./skills/offline-script-factory/scripts/update_bundle_index.py)
+- A metadata validator at [`skills/offline-script-factory/scripts/validate_bundle_metadata.py`](./skills/offline-script-factory/scripts/validate_bundle_metadata.py)
 - A checklist for offline feasibility and verification at [`skills/offline-script-factory/references/offline-automation-checklist.md`](./skills/offline-script-factory/references/offline-automation-checklist.md)
 
 ## Core Principles
@@ -74,8 +76,11 @@ Unless the task clearly needs more, the generated output should stay minimal:
 ```text
 <bundle-name>/
   run.py | run.ps1
+  bundle.spec.json
   config.example.json
 ```
+
+`bundle.spec.json` is the bundle's machine-readable metadata source.
 
 `config.example.json` is optional and should only be created when stable configuration is useful.
 
@@ -93,7 +98,9 @@ Unless the task clearly needs more, the generated output should stay minimal:
 │       └── scripts/
 │           ├── init_offline_bundle.py
 │           ├── install.ps1
-│           └── install.sh
+│           ├── install.sh
+│           ├── update_bundle_index.py
+│           └── validate_bundle_metadata.py
 ├── README.md
 ├── README_CN.md
 └── LICENSE
@@ -102,6 +109,20 @@ Unless the task clearly needs more, the generated output should stay minimal:
 ## Usage
 
 This repository now includes install scripts for quickly copying the skill into a skills directory.
+
+If you keep multiple generated bundles in one directory, run the index generator to produce a local registry:
+
+```powershell
+python .\skills\offline-script-factory\scripts\update_bundle_index.py --root .\my-bundles
+```
+
+This writes `bundles.index.json`, which can help future agent sessions inspect existing local tools before generating new ones.
+
+You can also validate bundle metadata before release or reuse:
+
+```powershell
+python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\my-bundles
+```
 
 If your agent platform does not support explicit skill invocation, you can still reuse the workflow by reading [`SKILL.md`](./skills/offline-script-factory/SKILL.md) directly.
 

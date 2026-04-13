@@ -32,7 +32,7 @@ description: '把已经完成或已经明确的需求沉淀成可重复运行的
 4. 生成脚手架
 
 - 从零开始时，先运行 `scripts/init_offline_bundle.py` 生成最小 bundle，再补上任务逻辑。
-- 默认保持最小结构：一个可执行脚本，必要时再加 `config.example.json`。
+- 默认保持最小结构：一个可执行脚本、一个 `bundle.spec.json`，必要时再加 `config.example.json`。
 - 除非目标运行时确实无法暴露帮助入口，否则不要额外生成说明文档，把用法内置进脚本本身。
 
 5. 为复用而实现
@@ -40,6 +40,7 @@ description: '把已经完成或已经明确的需求沉淀成可重复运行的
 - 默认把使用说明内置到脚本中，而不是额外生成说明文件。
 - Python 脚本默认提供 `--help`。
 - PowerShell 脚本默认提供 `-Help`，并补充 comment-based help 以支持 `Get-Help`。
+- 默认生成 `bundle.spec.json`，把入口脚本、帮助命令、自检命令、运行时和用途说明集中写在一个地方。
 - 通过参数、配置承接路径和阈值，不要把机器相关值硬编码进脚本。
 - 增加输入校验、明确错误信息和非零退出码。
 - 涉及文件或系统状态变更时，优先提供 `--dry-run`、`--what-if` 或等价安全开关。
@@ -70,11 +71,13 @@ description: '把已经完成或已经明确的需求沉淀成可重复运行的
 ```text
 <bundle-name>/
   run.py | run.ps1
+  bundle.spec.json
   config.example.json   # 仅在确实需要稳定配置时加入
 ```
 
 遵守这些默认规则：
 - bundle 名称使用稳定的动宾结构。
+- 把用途、入口、帮助命令、自检命令集中写进 `bundle.spec.json`。
 - 能用参数传递时，不要在源码里写死绝对路径。
 - 依赖尽量限制在标准库或用户机器上已有工具。
 - 让重复执行安全，或者至少让风险显式可见。
@@ -97,6 +100,10 @@ description: '把已经完成或已经明确的需求沉淀成可重复运行的
 判断离线可行性、运行时选择、安全开关和验证闭环时，读取 `references/offline-automation-checklist.md`。
 
 从零生成 bundle 时，运行 `scripts/init_offline_bundle.py`。生成后优先 patch 已有文件，不要反复重建目录。
+
+当一个目录下积累了多个 bundle 时，运行 `scripts/update_bundle_index.py` 生成或刷新总索引，方便后续 agent 先查本地能力再决定是否新建。
+
+交付前或批量整理 bundle 时，运行 `scripts/validate_bundle_metadata.py` 校验 `bundle.spec.json` 和 `bundles.index.json` 的结构是否完整。
 
 ## 最终回复
 

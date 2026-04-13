@@ -29,6 +29,7 @@
 6. 为失败场景提供明确的错误输出和退出码。
 7. 确保至少存在一个可安全执行的验证入口。
 8. 确保脚本自身带有帮助入口，优先内置帮助而不是额外说明文件。
+9. 生成 `bundle.spec.json`，集中记录入口、帮助命令、自检命令和用途。
 
 ## 建议保留的参数
 
@@ -50,6 +51,7 @@
 - 默认把用法写进脚本帮助，而不是额外再写一堆文档。
 - Python 优先使用 `argparse --help`。
 - PowerShell 优先提供 `-Help` 和 `Get-Help` 可读的 comment-based help。
+- 默认生成 `bundle.spec.json` 作为 bundle 元数据单一来源。
 - 只有当任务确实存在稳定配置项时，才加入 `config.example.json`。
 
 ## 运行验证闭环
