@@ -30,7 +30,7 @@ from pathlib import Path
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="__TITLE__",
-        epilog="示例: python run.py --input 输入.txt --output 输出.txt --dry-run",
+        epilog="示例: python __SCRIPT_NAME__ --input 输入.txt --output 输出.txt --dry-run",
     )
     parser.add_argument("--input", dest="input_path", help="输入文件或目录路径。")
     parser.add_argument("--output", dest="output_path", help="输出文件或目录路径。")
@@ -117,7 +117,7 @@ __TITLE__
 显示当前脚本的简要用法说明。
 
 .EXAMPLE
-./run.ps1 -InputPath .\\输入.txt -OutputPath .\\输出.txt -DryRun
+./__SCRIPT_NAME__ -InputPath .\\输入.txt -OutputPath .\\输出.txt -DryRun
 #>
 [CmdletBinding()]
 param(
@@ -135,7 +135,7 @@ $ErrorActionPreference = 'Stop'
 function Show-Usage {
     @"
 用法:
-  ./run.ps1 [-InputPath <路径>] [-OutputPath <路径>] [-ConfigPath <路径>] [-Help] [-SelfTest] [-DryRun]
+  ./__SCRIPT_NAME__ [-InputPath <路径>] [-OutputPath <路径>] [-ConfigPath <路径>] [-Help] [-SelfTest] [-DryRun]
 
 说明:
   -Help      显示本帮助
@@ -143,8 +143,8 @@ function Show-Usage {
   -DryRun    仅打印计划，不执行真实改动
 
 示例:
-  ./run.ps1 -InputPath .\\输入.txt -OutputPath .\\输出.txt -DryRun
-  Get-Help ./run.ps1 -Detailed
+  ./__SCRIPT_NAME__ -InputPath .\\输入.txt -OutputPath .\\输出.txt -DryRun
+  Get-Help ./__SCRIPT_NAME__ -Detailed
 "@ | Write-Host
 }
 
@@ -257,6 +257,11 @@ def command_examples(runtime: str, script_name: str) -> tuple[str, str]:
     )
 
 
+def entry_point_name(bundle_name: str, runtime: str) -> str:
+    suffix = ".py" if runtime == "python" else ".ps1"
+    return f"{bundle_name}{suffix}"
+
+
 def build_spec(
     *,
     bundle_name: str,
@@ -287,11 +292,17 @@ def build_spec(
     }
 
 
-def render_script(runtime: str, title: str) -> tuple[str, str]:
+def render_script(runtime: str, title: str, script_name: str) -> tuple[str, str]:
     if runtime == "python":
-        return "run.py", PYTHON_TEMPLATE.replace("__TITLE__", title)
+        return (
+            script_name,
+            PYTHON_TEMPLATE.replace("__TITLE__", title).replace("__SCRIPT_NAME__", script_name),
+        )
 
-    return "run.ps1", POWERSHELL_TEMPLATE.replace("__TITLE__", title)
+    return (
+        script_name,
+        POWERSHELL_TEMPLATE.replace("__TITLE__", title).replace("__SCRIPT_NAME__", script_name),
+    )
 
 
 def write_text_file(path: Path, content: str, force: bool) -> None:
@@ -311,10 +322,12 @@ def main() -> int:
     display_name = args.display_name.strip() if args.display_name else bundle_title(
         args.bundle_name, folder_name
     )
+    script_name = entry_point_name(folder_name, args.runtime)
 
     script_name, script_body = render_script(
         runtime=args.runtime,
         title=display_name,
+        script_name=script_name,
     )
     script_path = bundle_dir / script_name
     write_text_file(script_path, script_body, args.force)

@@ -70,13 +70,14 @@ description: '把已经完成或已经明确的需求沉淀成可重复运行的
 
 ```text
 <bundle-name>/
-  run.py | run.ps1
+  <bundle-name>.py | <bundle-name>.ps1
   bundle.spec.json
   config.example.json   # 仅在确实需要稳定配置时加入
 ```
 
 遵守这些默认规则：
 - bundle 名称使用稳定的动宾结构。
+- 入口脚本名称默认跟 bundle 名一致，避免使用 `run` 这类过于泛化的名字。
 - 把用途、入口、帮助命令、自检命令集中写进 `bundle.spec.json`。
 - 能用参数传递时，不要在源码里写死绝对路径。
 - 依赖尽量限制在标准库或用户机器上已有工具。

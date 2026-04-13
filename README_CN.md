@@ -82,7 +82,7 @@ bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-
 
 ```text
 <bundle-name>/
-  run.py | run.ps1
+  <bundle-name>.py | <bundle-name>.ps1
   bundle.spec.json
   config.example.json
 ```
@@ -141,6 +141,22 @@ python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\my-
 2. 运行安全验证命令，例如 `--self-test`、`-SelfTest` 或 `--dry-run`。
 3. 如果安全且可行，再跑一次小样本真实命令。
 4. 若失败，则继续修复并重跑，直到通过或确认存在外部阻塞。
+
+## 自动化测试
+
+可以用下面的命令运行仓库测试：
+
+```powershell
+python -m unittest discover -s .\tests -v
+```
+
+当前自动化测试主要覆盖：
+
+- Python bundle 生成
+- PowerShell bundle 生成
+- 元数据索引生成
+- 元数据校验
+- PowerShell 安装脚本行为
 
 ## 适用范围
 

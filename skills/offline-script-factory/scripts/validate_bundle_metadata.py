@@ -59,7 +59,24 @@ def validate_bundle_spec(path: Path) -> list[str]:
     if data.get("runtime") not in {"python", "powershell"}:
         errors.append("runtime 必须是 python 或 powershell")
 
+    entry_point = data.get("entry_point")
+    if isinstance(entry_point, str) and entry_point.strip():
+        entry_path = path.parent / entry_point
+        if not entry_path.is_file():
+            errors.append(f"entry_point 指向的文件不存在: {entry_point}")
+
+        runtime = data.get("runtime")
+        if runtime == "python" and not entry_point.endswith(".py"):
+            errors.append("python bundle 的 entry_point 必须以 .py 结尾")
+        if runtime == "powershell" and not entry_point.endswith(".ps1"):
+            errors.append("powershell bundle 的 entry_point 必须以 .ps1 结尾")
+
     require_optional_string(data, "config_file", errors)
+    config_file = data.get("config_file")
+    if isinstance(config_file, str) and config_file.strip():
+        config_path = path.parent / config_file
+        if not config_path.is_file():
+            errors.append(f"config_file 指向的文件不存在: {config_file}")
 
     if not isinstance(data.get("environment_variables"), list):
         errors.append("environment_variables 必须是数组")

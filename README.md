@@ -75,7 +75,7 @@ Unless the task clearly needs more, the generated output should stay minimal:
 
 ```text
 <bundle-name>/
-  run.py | run.ps1
+  <bundle-name>.py | <bundle-name>.ps1
   bundle.spec.json
   config.example.json
 ```
@@ -134,6 +134,22 @@ Before a generated script is considered done, the agent should:
 2. Run a safe verification command such as `--self-test`, `-SelfTest`, or `--dry-run`.
 3. Run a small realistic example when safe.
 4. Fix failures and rerun until the script passes or an external blocker is confirmed.
+
+## Testing
+
+Run the repository test suite with:
+
+```powershell
+python -m unittest discover -s .\tests -v
+```
+
+Current automated coverage focuses on:
+
+- bundle generation for Python
+- bundle generation for PowerShell
+- metadata index generation
+- metadata validation
+- PowerShell installer behavior
 
 ## Scope
 
