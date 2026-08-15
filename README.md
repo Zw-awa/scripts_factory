@@ -46,6 +46,24 @@ You can also install to a custom skills directory explicitly:
 bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-agent/skills"
 ```
 
+For repeatable automation, prefer environment variables for machine-specific paths:
+
+```powershell
+$env:OFFLINE_SCRIPT_FACTORY_SKILLS_DIR = "D:\\my-skills"
+$env:OFFLINE_SCRIPT_FACTORY_OUTPUT_DIR = "D:\\my-bundles"
+```
+
+The explicit SkillsDir/skills-dir and output arguments always take precedence over their environment variables.
+
+For repeatable automation, prefer environment variables for machine-specific paths:
+
+```powershell
+$env:OFFLINE_SCRIPT_FACTORY_SKILLS_DIR = "D:\\my-skills"
+$env:OFFLINE_SCRIPT_FACTORY_OUTPUT_DIR = "D:\\my-bundles"
+```
+
+The explicit SkillsDir/skills-dir and output arguments always take precedence over their environment variables.
+
 Then invoke it with a prompt such as:
 
 ```text
@@ -59,6 +77,8 @@ Use $offline-script-factory to turn this completed task into a reusable offline 
 - A bundle index generator at [`skills/offline-script-factory/scripts/update_bundle_index.py`](./skills/offline-script-factory/scripts/update_bundle_index.py)
 - A metadata validator at [`skills/offline-script-factory/scripts/validate_bundle_metadata.py`](./skills/offline-script-factory/scripts/validate_bundle_metadata.py)
 - A checklist for offline feasibility and verification at [`skills/offline-script-factory/references/offline-automation-checklist.md`](./skills/offline-script-factory/references/offline-automation-checklist.md)
+- Runnable examples in [`examples/`](./examples)
+- Runnable examples in [`examples/`](./examples)
 
 ## Core Principles
 
@@ -124,6 +144,18 @@ You can also validate bundle metadata before release or reuse:
 python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\my-bundles
 ```
 
+The repository examples can be checked with:
+
+```powershell
+python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\examples
+```
+
+The repository examples can be checked with:
+
+```powershell
+python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\examples
+```
+
 If your agent platform does not support explicit skill invocation, you can still reuse the workflow by reading [`SKILL.md`](./skills/offline-script-factory/SKILL.md) directly.
 
 ## Verification Standard
@@ -150,6 +182,10 @@ Current automated coverage focuses on:
 - metadata index generation
 - metadata validation
 - PowerShell installer behavior
+
+Tests use OFFLINE_SCRIPT_FACTORY_TEST_TMPDIR when set, otherwise the operating system's temporary directory. This keeps test runs independent of repository ACLs and checkout contents.
+
+Tests use OFFLINE_SCRIPT_FACTORY_TEST_TMPDIR when set, otherwise the operating system's temporary directory. This keeps test runs independent of repository ACLs and checkout contents.
 
 ## Scope
 

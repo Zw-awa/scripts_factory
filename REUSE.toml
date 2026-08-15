@@ -1,0 +1,22 @@
+version = 1
+
+[[annotations]]
+path = [
+  ".gitignore",
+  "LICENSE",
+  "README.md",
+  "README_CN.md",
+  ".github/**/*.yml",
+  "examples/**/*.json",
+  "examples/**/*.ps1",
+  "examples/**/*.py",
+  "skills/**/*.md",
+  "skills/**/*.ps1",
+  "skills/**/*.py",
+  "skills/**/*.sh",
+  "skills/**/*.yaml",
+  "tests/**/*.py",
+]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Zw-awa"
+SPDX-License-Identifier = "MIT"

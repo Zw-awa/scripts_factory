@@ -38,6 +38,15 @@ bash ./skills/offline-script-factory/scripts/install.sh
 bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-agent/skills"
 ```
 
+对于可重复的自动化，机器相关目录建议使用环境变量：
+
+```powershell
+$env:OFFLINE_SCRIPT_FACTORY_SKILLS_DIR = "D:\\my-skills"
+$env:OFFLINE_SCRIPT_FACTORY_OUTPUT_DIR = "D:\\my-bundles"
+```
+
+显式的 SkillsDir/skills-dir 和 output 参数优先级高于环境变量。
+
 安装后可以用类似这样的提示词调用：
 
 ```text
@@ -66,6 +75,7 @@ bash ./skills/offline-script-factory/scripts/install.sh --skills-dir "$HOME/.my-
   [`skills/offline-script-factory/scripts/validate_bundle_metadata.py`](./skills/offline-script-factory/scripts/validate_bundle_metadata.py)
 - 离线可行性与验证清单：
   [`skills/offline-script-factory/references/offline-automation-checklist.md`](./skills/offline-script-factory/references/offline-automation-checklist.md)
+- 可直接运行的样例：[`examples/`](./examples)
 
 ## 核心理念
 
@@ -131,6 +141,12 @@ python .\skills\offline-script-factory\scripts\update_bundle_index.py --root .\m
 python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\my-bundles
 ```
 
+也可以校验仓库自带样例：
+
+```powershell
+python .\skills\offline-script-factory\scripts\validate_bundle_metadata.py .\examples
+```
+
 如果你的 agent 平台不支持显式 skill 调用，也可以直接读取 [`SKILL.md`](./skills/offline-script-factory/SKILL.md)，按其中流程执行。
 
 ## 验证标准
@@ -157,6 +173,8 @@ python -m unittest discover -s .\tests -v
 - 元数据索引生成
 - 元数据校验
 - PowerShell 安装脚本行为
+
+测试默认使用操作系统临时目录；设置 OFFLINE_SCRIPT_FACTORY_TEST_TMPDIR 后可指定测试根目录，避免受仓库 ACL 和残留文件影响。
 
 ## 适用范围
 

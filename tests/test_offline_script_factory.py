@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
-from uuid import uuid4
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -16,17 +17,19 @@ INIT_BUNDLE = SCRIPTS_DIR / "init_offline_bundle.py"
 UPDATE_INDEX = SCRIPTS_DIR / "update_bundle_index.py"
 VALIDATE_METADATA = SCRIPTS_DIR / "validate_bundle_metadata.py"
 INSTALL_PS1 = SCRIPTS_DIR / "install.ps1"
-TEST_TMP_ROOT = REPO_ROOT / "tmp" / "test-runs"
-TEST_TMP_ROOT.mkdir(parents=True, exist_ok=True)
+TEST_TMP_ROOT_ENV = "OFFLINE_SCRIPT_FACTORY_TEST_TMPDIR"
 
 
-def run_command(args: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+def run_command(
+    args: list[str], cwd: Path | None = None, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         args,
         cwd=cwd,
         capture_output=True,
         text=True,
         check=False,
+        env=env,
     )
 
 
@@ -44,8 +47,11 @@ def resolve_powershell() -> str | None:
 
 @contextmanager
 def workspace_test_dir() -> Path:
-    path = TEST_TMP_ROOT / f"case-{uuid4().hex}"
-    path.mkdir(parents=True, exist_ok=False)
+    configured_root = os.environ.get(TEST_TMP_ROOT_ENV)
+    base_dir = Path(configured_root).resolve() if configured_root else None
+    if base_dir:
+        base_dir.mkdir(parents=True, exist_ok=True)
+    path = Path(tempfile.mkdtemp(prefix="offline-script-factory-", dir=base_dir))
     try:
         yield path
     finally:
@@ -80,6 +86,18 @@ class OfflineScriptFactoryTests(unittest.TestCase):
             self.assertEqual(spec["entry_point"], "csv-report-tool.py")
             self.assertEqual(spec["help_command"], "python csv-report-tool.py --help")
             self.assertEqual(spec["self_test_command"], "python csv-report-tool.py --self-test")
+
+    def test_init_bundle_uses_output_environment_variable(self) -> None:
+        with workspace_test_dir() as root:
+            output = root / "from-environment"
+            environment = os.environ.copy()
+            environment["OFFLINE_SCRIPT_FACTORY_OUTPUT_DIR"] = str(output)
+            result = run_command(
+                [sys.executable, str(INIT_BUNDLE), "env-bundle", "--purpose", "测试环境变量输出目录。"],
+                env=environment,
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)
+            self.assertTrue((output / "env-bundle" / "bundle.spec.json").is_file())
 
     def test_init_bundle_powershell_uses_bundle_name_as_entry_point(self) -> None:
         powershell = resolve_powershell()
@@ -191,6 +209,40 @@ class OfflineScriptFactoryTests(unittest.TestCase):
             validate_result = run_python(VALIDATE_METADATA, str(bundle_dir / "bundle.spec.json"))
             self.assertNotEqual(validate_result.returncode, 0)
             self.assertIn("entry_point 指向的文件不存在", validate_result.stdout)
+
+    def test_validator_rejects_paths_outside_bundle(self) -> None:
+        with workspace_test_dir() as root:
+            result = run_python(
+                INIT_BUNDLE,
+                "csv-report-tool",
+                "--purpose",
+                "把输入 CSV 转成标准化报表。",
+                "--output",
+                str(root),
+            )
+            self.assertEqual(result.returncode, 0, msg=result.stderr or result.stdout)
+
+            spec_path = root / "csv-report-tool" / "bundle.spec.json"
+            spec = json.loads(spec_path.read_text(encoding="utf-8"))
+            spec["entry_point"] = "../outside.py"
+            spec_path.write_text(json.dumps(spec), encoding="utf-8")
+
+            validate_result = run_python(VALIDATE_METADATA, str(spec_path))
+            self.assertNotEqual(validate_result.returncode, 0)
+            self.assertIn("entry_point 不得指向 bundle 外部", validate_result.stdout)
+
+    def test_force_replaces_bundle_without_stale_files(self) -> None:
+        with workspace_test_dir() as root:
+            first = run_python(
+                INIT_BUNDLE, "replace-me", "--output", str(root), "--with-config"
+            )
+            self.assertEqual(first.returncode, 0, msg=first.stderr or first.stdout)
+
+            second = run_python(
+                INIT_BUNDLE, "replace-me", "--output", str(root), "--force"
+            )
+            self.assertEqual(second.returncode, 0, msg=second.stderr or second.stdout)
+            self.assertFalse((root / "replace-me" / "config.example.json").exists())
 
     def test_install_ps1_copies_skill_to_target_directory(self) -> None:
         powershell = resolve_powershell()

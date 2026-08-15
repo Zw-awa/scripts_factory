@@ -38,6 +38,21 @@ def require_optional_string(data: dict, key: str, errors: list[str]) -> None:
         errors.append(f"字段必须为字符串或 null: {key}")
 
 
+def resolve_bundle_file(bundle_dir: Path, value: str, field: str, errors: list[str]) -> Path | None:
+    candidate = Path(value)
+    if candidate.is_absolute():
+        errors.append(f"{field} 必须是 bundle 内的相对路径: {value}")
+        return None
+
+    resolved = (bundle_dir / candidate).resolve()
+    try:
+        resolved.relative_to(bundle_dir.resolve())
+    except ValueError:
+        errors.append(f"{field} 不得指向 bundle 外部: {value}")
+        return None
+    return resolved
+
+
 def validate_bundle_spec(path: Path) -> list[str]:
     data = load_json(path)
     errors: list[str] = []
@@ -61,8 +76,8 @@ def validate_bundle_spec(path: Path) -> list[str]:
 
     entry_point = data.get("entry_point")
     if isinstance(entry_point, str) and entry_point.strip():
-        entry_path = path.parent / entry_point
-        if not entry_path.is_file():
+        entry_path = resolve_bundle_file(path.parent, entry_point, "entry_point", errors)
+        if entry_path and not entry_path.is_file():
             errors.append(f"entry_point 指向的文件不存在: {entry_point}")
 
         runtime = data.get("runtime")
@@ -74,8 +89,8 @@ def validate_bundle_spec(path: Path) -> list[str]:
     require_optional_string(data, "config_file", errors)
     config_file = data.get("config_file")
     if isinstance(config_file, str) and config_file.strip():
-        config_path = path.parent / config_file
-        if not config_path.is_file():
+        config_path = resolve_bundle_file(path.parent, config_file, "config_file", errors)
+        if config_path and not config_path.is_file():
             errors.append(f"config_file 指向的文件不存在: {config_file}")
 
     if not isinstance(data.get("environment_variables"), list):

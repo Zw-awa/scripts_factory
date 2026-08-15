@@ -1,0 +1,14 @@
+{
+  "schema": "offline-script-factory.bundle/v1",
+  "bundle_name": "csv-summary",
+  "display_name": "CSV 摘要",
+  "purpose": "读取本地 CSV 并输出行数与列名摘要。",
+  "runtime": "python",
+  "entry_point": "csv-summary.py",
+  "help_command": "python csv-summary.py --help",
+  "self_test_command": "python csv-summary.py --self-test",
+  "config_file": null,
+  "environment_variables": [],
+  "external_dependencies": [],
+  "notes": ["仅使用 Python 标准库。"]
+}

@@ -5,9 +5,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import shutil
 import sys
+import tempfile
 from pathlib import Path
+from uuid import uuid4
 
 BASE_SPEC_NOTES = [
     "请优先把外部工具路径放进配置文件、环境变量或单独路径配置，不要散落硬编码在源码里。",
@@ -211,8 +215,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path.cwd(),
-        help="bundle 将被创建到这个目录下。",
+        default=Path(os.environ.get("OFFLINE_SCRIPT_FACTORY_OUTPUT_DIR", Path.cwd())),
+        help=(
+            "bundle 将被创建到这个目录下；未提供时读取 "
+            "OFFLINE_SCRIPT_FACTORY_OUTPUT_DIR，最后使用当前目录。"
+        ),
     )
     parser.add_argument(
         "--runtime",
@@ -228,7 +235,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="如果目标文件已存在，则覆盖它们。",
+        help="原子替换同名 bundle 目录。",
     )
     return parser
 
@@ -305,34 +312,20 @@ def render_script(runtime: str, title: str, script_name: str) -> tuple[str, str]
     )
 
 
-def write_text_file(path: Path, content: str, force: bool) -> None:
-    if path.exists() and not force:
-        raise FileExistsError(f"拒绝覆盖已存在文件: {path}")
-
+def write_text_file(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8", newline="\n")
 
 
-def main() -> int:
-    args = build_parser().parse_args()
-
-    folder_name = sanitize_folder_name(args.bundle_name)
-    output_root = args.output.resolve()
-    bundle_dir = output_root / folder_name
-    bundle_dir.mkdir(parents=True, exist_ok=True)
+def build_bundle_files(args: argparse.Namespace, folder_name: str) -> dict[str, str]:
     display_name = args.display_name.strip() if args.display_name else bundle_title(
         args.bundle_name, folder_name
     )
     script_name = entry_point_name(folder_name, args.runtime)
-
-    script_name, script_body = render_script(
+    _, script_body = render_script(
         runtime=args.runtime,
         title=display_name,
         script_name=script_name,
     )
-    script_path = bundle_dir / script_name
-    write_text_file(script_path, script_body, args.force)
-
-    spec_path = bundle_dir / "bundle.spec.json"
     spec_body = (
         json.dumps(
             build_spec(
@@ -348,16 +341,54 @@ def main() -> int:
         )
         + "\n"
     )
-    write_text_file(spec_path, spec_body, args.force)
-
+    files = {script_name: script_body, "bundle.spec.json": spec_body}
     if args.with_config:
-        config_path = bundle_dir / "config.example.json"
-        config_body = json.dumps(CONFIG_TEMPLATE, indent=2, ensure_ascii=True) + "\n"
-        write_text_file(config_path, config_body, args.force)
+        files["config.example.json"] = json.dumps(
+            CONFIG_TEMPLATE, indent=2, ensure_ascii=True
+        ) + "\n"
+    return files
+
+
+def publish_bundle(staging_dir: Path, bundle_dir: Path, force: bool) -> None:
+    if bundle_dir.exists() and not force:
+        raise FileExistsError(f"拒绝覆盖已存在 bundle: {bundle_dir}。使用 --force 可替换它。")
+
+    backup_dir: Path | None = None
+    try:
+        if bundle_dir.exists():
+            backup_dir = bundle_dir.with_name(f".{bundle_dir.name}.backup-{uuid4().hex}")
+            bundle_dir.replace(backup_dir)
+        staging_dir.replace(bundle_dir)
+    except Exception:
+        if backup_dir and backup_dir.exists() and not bundle_dir.exists():
+            backup_dir.replace(bundle_dir)
+        raise
+    else:
+        if backup_dir:
+            shutil.rmtree(backup_dir)
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+
+    folder_name = sanitize_folder_name(args.bundle_name)
+    output_root = args.output.resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    bundle_dir = output_root / folder_name
+    files = build_bundle_files(args, folder_name)
+    staging_dir = Path(tempfile.mkdtemp(prefix=f".{folder_name}.staging-", dir=output_root))
+    try:
+        for name, content in files.items():
+            write_text_file(staging_dir / name, content)
+        publish_bundle(staging_dir, bundle_dir, args.force)
+    except Exception:
+        if staging_dir.exists():
+            shutil.rmtree(staging_dir, ignore_errors=True)
+        raise
 
     print(f"已创建 bundle: {bundle_dir}")
     print(f"运行时: {args.runtime}")
-    print(f"入口脚本: {script_path.name}")
+    print(f"入口脚本: {entry_point_name(folder_name, args.runtime)}")
     print("元数据文件: bundle.spec.json")
     if args.with_config:
         print("配置文件: config.example.json")

@@ -1,0 +1,14 @@
+{
+  "schema": "offline-script-factory.bundle/v1",
+  "bundle_name": "archive-old-files",
+  "display_name": "列出旧文件",
+  "purpose": "以演练模式列出目录中超过指定天数的文件。",
+  "runtime": "powershell",
+  "entry_point": "archive-old-files.ps1",
+  "help_command": ".\\archive-old-files.ps1 -Help",
+  "self_test_command": ".\\archive-old-files.ps1 -SelfTest",
+  "config_file": null,
+  "environment_variables": [],
+  "external_dependencies": [],
+  "notes": ["默认只列出文件，不删除或移动文件。"]
+}
