@@ -4,6 +4,22 @@
 
 离线脚本工厂是一个轻量级 skill 项目，用来帮助代码 agent 把“已经解决过的一次性需求”沉淀成以后可重复运行的本地脚本 bundle。
 
+仓库同时包含实验性的 `scripts-factory` 本地 AI 中枢，用于任务规划、受限 session 调度、短中长期记忆、用户画像审核和 skill 候选凝练。
+
+## 本地中枢快速开始
+
+```powershell
+python -m pip install -e ".[dev]"
+$env:SCRIPTS_FACTORY_HOME = "$PWD\.scripts-factory"
+scripts-factory init
+scripts-factory approval grant filesystem.write .
+scripts-factory task run "分析文件，然后生成报表，并验证结果" --provider fake --mode planned
+scripts-factory sleep
+scripts-factory skill review
+```
+
+生产使用时可把 provider 设置为 `opencode` 或 `openai`。OpenAI 适配器从 `OPENAI_API_KEY` 读取凭据；数据库、bundle 和候选目录分别支持 `SCRIPTS_FACTORY_DB`、`SCRIPTS_FACTORY_BUNDLES_DIR` 和 `SCRIPTS_FACTORY_CANDIDATES_DIR`。
+
 它的核心目标不是生成一整套重量级 CLI 框架，而是把已经验证可行的解决方案快速固化下来，让用户以后直接本地运行，不需要每次都重新发起一次完整的 agent 对话。
 
 ## 快速开始

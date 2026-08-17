@@ -4,6 +4,22 @@ English | [简体中文](./README_CN.md)
 
 Offline Script Factory is a lightweight skill project that helps a coding agent turn a solved task into a reusable local script bundle.
 
+The repository also contains an experimental `scripts-factory` local AI core for task planning, bounded session orchestration, layered memory, profile review, and skill-candidate consolidation.
+
+## Local Core Quick Start
+
+```powershell
+python -m pip install -e ".[dev]"
+$env:SCRIPTS_FACTORY_HOME = "$PWD\.scripts-factory"
+scripts-factory init
+scripts-factory approval grant filesystem.write .
+scripts-factory task run "Analyze files, generate a report, and verify it" --provider fake --mode planned
+scripts-factory sleep
+scripts-factory skill review
+```
+
+Set the provider to `opencode` or `openai` for live runs. The OpenAI adapter reads `OPENAI_API_KEY`; storage locations can be overridden with `SCRIPTS_FACTORY_DB`, `SCRIPTS_FACTORY_BUNDLES_DIR`, and `SCRIPTS_FACTORY_CANDIDATES_DIR`.
+
 Instead of asking the agent to solve the same task again and again, the workflow is:
 
 1. Solve a task once.

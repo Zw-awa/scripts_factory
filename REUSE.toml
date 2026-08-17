@@ -6,6 +6,10 @@ path = [
   "LICENSE",
   "README.md",
   "README_CN.md",
+  "alembic.ini",
+  "config.example.toml",
+  "pyproject.toml",
+  "docs/**/*.md",
   ".github/**/*.yml",
   "examples/**/*.json",
   "examples/**/*.ps1",
@@ -15,6 +19,9 @@ path = [
   "skills/**/*.py",
   "skills/**/*.sh",
   "skills/**/*.yaml",
+  "src/**/*.py",
+  "migrations/**/*.py",
+  "migrations/**/*.mako",
   "tests/**/*.py",
 ]
 precedence = "aggregate"

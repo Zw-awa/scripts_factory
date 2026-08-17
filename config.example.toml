@@ -1,0 +1,12 @@
+[core]
+provider = "fake"
+# model = "provider/model-name"
+max_concurrency = 3
+max_depth = 3
+max_nodes = 12
+session_timeout_seconds = 1800
+
+[paths]
+# database = "D:/data/scripts-factory/state.db"
+# bundles = "D:/data/scripts-factory/bundles"
+# candidates = "D:/data/scripts-factory/candidates"
