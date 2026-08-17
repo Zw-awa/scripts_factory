@@ -10,8 +10,6 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    env:
-      OFFLINE_SCRIPT_FACTORY_TEST_TMPDIR: ${{ runner.temp }}/offline-script-factory-tests
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
