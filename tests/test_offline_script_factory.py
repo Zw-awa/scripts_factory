@@ -23,13 +23,21 @@ TEST_TMP_ROOT_ENV = "OFFLINE_SCRIPT_FACTORY_TEST_TMPDIR"
 def run_command(
     args: list[str], cwd: Path | None = None, env: dict[str, str] | None = None
 ) -> subprocess.CompletedProcess[str]:
+    process_env = os.environ.copy()
+    if env:
+        process_env.update(env)
+    process_env["PYTHONUTF8"] = "1"
+    process_env["PYTHONIOENCODING"] = "utf-8"
+
     return subprocess.run(
         args,
         cwd=cwd,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
-        env=env,
+        env=process_env,
     )
 
 
